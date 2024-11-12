@@ -5,8 +5,6 @@
 .idea/modules.xml
 .idea/libraries/*.xml
 dictionaries/
-!**/src/main/*
-!**/src/test/*
 
 ### Mac OS ###
 .DS_Store
