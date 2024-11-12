@@ -4,6 +4,7 @@
 .idea/shelf/*
 .idea/modules.xml
 .idea/libraries/*.xml
+.idea/discord.xml
 dictionaries/
 
 ### Mac OS ###
