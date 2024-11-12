@@ -9,3 +9,6 @@ dictionaries/
 
 ### Mac OS ###
 .DS_Store
+
+### IMPORTANT ###
+.env
