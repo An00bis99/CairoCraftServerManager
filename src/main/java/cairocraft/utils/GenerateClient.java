@@ -26,4 +26,8 @@ public class GenerateClient {
         // Now we can use the API token to do our work
         return new ExarotonClient(API_TOKEN);
     }
+
+    public static ExarotonClient Initialize(String API_TOKEN) {
+        return new ExarotonClient(API_TOKEN);
+    }
 }
