@@ -1,30 +1,36 @@
 package cairocraft.anoobis;
 
+import cairocraft.utils.GenerateClient;
 import com.exaroton.api.ExarotonClient;
-
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.util.Scanner;
 
 public class Main {
     public static void main(String[] args) {
-        // First read in .env file for API Token
-        String API_TOKEN;
+        // CLI Flags
+        // -d stands for Developer mode
+        //      This will read in the API token from a .env file
+        //      rather than taking it from the user (if they don't already
+        //      have it on file) and storing it in the local directory
+        boolean DevMode = false;
+
+        for (int i = 0; i < args.length; i++) {
+            switch (args[i]) {
+                case "d":
+                    // Enable developer mode
+                    DevMode = true;
+                    break;
+            }
+        }
+        // First initialize the client
+        ExarotonClient client;
+
         try {
-            File envObj = new File(".env");
-            Scanner reader = new Scanner(envObj);
-            String apiString = reader.nextLine();
-            reader.close();
-
-            String[] separatedString = apiString.split("=");
-            API_TOKEN = separatedString[1];
-
-        } catch (FileNotFoundException e) {
-            throw new RuntimeException(e);
+            client = GenerateClient.Initialize();
+        } catch (Exception e) {
+            System.out.println("Error occurred while initializing ExarotonClient");
+            System.out.println("Error message: " + e.getMessage());
+            System.exit(1);
         }
 
-        // Now we can use the API token to do our work
-        ExarotonClient client = new ExarotonClient(API_TOKEN);
 
     }
 }
