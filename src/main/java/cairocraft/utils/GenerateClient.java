@@ -30,4 +30,6 @@ public class GenerateClient {
     public static ExarotonClient Initialize(String API_TOKEN) {
         return new ExarotonClient(API_TOKEN);
     }
+
+    
 }
