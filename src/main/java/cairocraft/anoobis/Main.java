@@ -5,6 +5,7 @@ import cairocraft.utils.GenerateClient;
 import com.exaroton.api.APIException;
 import com.exaroton.api.ExarotonClient;
 import com.exaroton.api.account.Account;
+import com.exaroton.api.server.Server;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -72,6 +73,7 @@ public class Main {
         configArray = DisplayGen.WelcomeMessage();
 
         if (apiKey.isEmpty()) {
+            // Only use userInput APIKey if none on file
             apiKey = configArray[0];
         }
 
@@ -119,11 +121,40 @@ public class Main {
         }
 
         // Now we can do everything we wanted to do
-        String inputString = "";
-        while (!inputString.equals("q")) {
+        Server currServer = null;
+        String serverName = "No Server Being Managed";
+        while (true) {
             // Init while loop for main menu
+            System.out.println("Enter the corresponding number/letter to make your selection\n");
+            System.out.println("Current Server: " + serverName + "\n");
+            System.out.println("1. Change server being managed");
+            System.out.println("2. Establish Connection with the server's Console");
+            System.out.println("3. Start the server");
+            System.out.println("4. Stop the server");
+            System.out.println("5. Modify server files");
+            System.out.println("6. Exit");
 
+            int inputNum = mainMenuInputParse(currServer);
+            if (inputNum != 6) {
+                SubMenu(inputNum);
+            } else {
+                break;
+            }
         }
+
+        System.out.println("\nSee you soon!");
+    }
+
+    static int mainMenuInputParse(Server currServer) {
+        // Returns
+        Scanner myScanner = new Scanner(System.in);
+        String userAnswer = myScanner.nextLine();
+        // Interpret input
+
+        return 0;
+    }
+
+    static void SubMenu(int inputNum) {
 
     }
 
