@@ -15,6 +15,7 @@ import java.util.NoSuchElementException;
 import java.util.Scanner;
 
 public class Main {
+
     public static void main(String[] args) {
         // CLI Flags
         // -d stands for Developer mode
@@ -123,7 +124,9 @@ public class Main {
         // Now we can do everything we wanted to do
         Server currServer = null;
         String serverName = "No Server Being Managed";
-        while (true) {
+        String serverId = "";
+        int inputNum = 0;
+        while (inputNum != 6) {
             // Init while loop for main menu
             System.out.println("Enter the corresponding number/letter to make your selection\n");
             System.out.println("Current Server: " + serverName + "\n");
@@ -134,27 +137,42 @@ public class Main {
             System.out.println("5. Modify server files");
             System.out.println("6. Exit");
 
-            int inputNum = mainMenuInputParse(currServer);
-            if (inputNum != 6) {
-                SubMenu(inputNum);
-            } else {
-                break;
+
+            inputNum = mainMenuInputParse();
+
+            switch (inputNum) {
+                case 1:
+                    // Change server
+                    
             }
+
         }
 
         System.out.println("\nSee you soon!");
     }
 
-    static int mainMenuInputParse(Server currServer) {
-        // Returns
+    static int mainMenuInputParse() {
+        // Returns false if exiting the program, true if exiting
         Scanner myScanner = new Scanner(System.in);
-        String userAnswer = myScanner.nextLine();
-        // Interpret input
 
-        return 0;
+        // Interpret input
+        boolean rightFormat = false;
+        int userConverted = 0;
+
+        while (!rightFormat) {
+            String userAnswer = myScanner.nextLine();
+            try {
+                userConverted = Integer.parseInt(userAnswer);
+                rightFormat = true;
+            } catch (NumberFormatException e) {
+                System.out.println("Please input a valid number.");
+            }
+        }
+
+        return userConverted;
     }
 
-    static void SubMenu(int inputNum) {
+    static void ChangeServerSubMenu(int ) {
 
     }
 
