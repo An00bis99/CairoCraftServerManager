@@ -16,6 +16,8 @@ import java.util.Scanner;
 
 public class Main {
 
+    private static final Account mUserAccount = null;
+
     public static void main(String[] args) {
         // CLI Flags
         // -d stands for Developer mode
@@ -138,12 +140,31 @@ public class Main {
             System.out.println("6. Exit");
 
 
-            inputNum = mainMenuInputParse();
+            inputNum = MenuInputParse();
 
             switch (inputNum) {
                 case 1:
                     // Change server
-                    
+                    ChangeServerSubMenu();
+                    break;
+                case 2:
+                    // Connect to server's console
+                    ConsoleConnectSubMenu();
+                    break;
+                case 3:
+                    // Start selected server
+                    StartServer();
+                    break;
+                case 4:
+                    // Stop server
+                    StopServer();
+                    break;
+                case 5:
+                    ModifyFilesSubMenu();
+                    break;
+                case 6:
+                    // Exit program
+                    break;
             }
 
         }
@@ -151,8 +172,9 @@ public class Main {
         System.out.println("\nSee you soon!");
     }
 
-    static int mainMenuInputParse() {
-        // Returns false if exiting the program, true if exiting
+    private static int MenuInputParse() {
+        // Returns num parsed from user input
+        // Used for numbered option menus
         Scanner myScanner = new Scanner(System.in);
 
         // Interpret input
@@ -163,18 +185,44 @@ public class Main {
             String userAnswer = myScanner.nextLine();
             try {
                 userConverted = Integer.parseInt(userAnswer);
+                if (userConverted < 1 || userConverted > 6) {
+                    throw new NumberFormatException("Number out of range");
+                }
                 rightFormat = true;
             } catch (NumberFormatException e) {
-                System.out.println("Please input a valid number.");
+                if (e.getMessage().equals("Number out of range")) {
+                    System.out.println("Please enter a number 1-6.");
+                } else {
+                    System.out.println("Please input a valid number.");
+                }
             }
         }
 
         return userConverted;
     }
 
-    static void ChangeServerSubMenu(int ) {
+    private static void ChangeServerSubMenu() {
+        // First get available servers
+        System.out.println("Here are the servers associated with your account:\n");
+        // Assign a number to each account
+        
 
     }
 
+    private static void ConsoleConnectSubMenu() {
+
+    }
+
+    private static void StartServer() {
+
+    }
+
+    private static void StopServer() {
+
+    }
+
+    private static void ModifyFilesSubMenu() {
+
+    }
 
 }
