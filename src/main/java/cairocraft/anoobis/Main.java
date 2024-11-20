@@ -6,6 +6,7 @@ import com.exaroton.api.APIException;
 import com.exaroton.api.ExarotonClient;
 import com.exaroton.api.account.Account;
 import com.exaroton.api.server.Server;
+import com.exaroton.api.ws.subscriber.ConsoleSubscriber;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -16,7 +17,8 @@ import java.util.Scanner;
 
 public class Main {
 
-    private static final Account mUserAccount = null;
+    private static ExarotonClient mUserClient = null;
+    private static Server mCurrServer = null;
 
     public static void main(String[] args) {
         // CLI Flags
@@ -54,7 +56,10 @@ public class Main {
             Scanner myScanner = new Scanner(configFile);
 
             try {
-                apiKey = (myScanner.nextLine()).split("=")[1];
+                String[] apiSplit = (myScanner.nextLine()).split("=");
+                if (apiSplit.length == 2) {
+                    apiKey = apiSplit[1];
+                }
                 userExists = Boolean.parseBoolean((myScanner.nextLine()).split("=")[1]);
                 apiSave = Boolean.parseBoolean((myScanner.nextLine()).split("=")[1]);
                 userName = (myScanner.nextLine()).split("=")[1];
@@ -82,26 +87,29 @@ public class Main {
 
 
         // Then initialize the client
-        ExarotonClient client = null;
+        //ExarotonClient client = null;
 
         try {
             if (DevMode) {
-                client = GenerateClient.Initialize();
+                mUserClient = GenerateClient.Initialize();
             } else {
-                client = GenerateClient.Initialize(apiKey);
+                mUserClient = GenerateClient.Initialize(apiKey);
             }
+        } catch (RuntimeException e) {
+            System.out.println(e.getMessage());
+            System.exit(0);
         } catch (Exception e) {
-            System.out.println("Error occurred while initializing ExarotonClient");
-            System.out.println("Error message: " + e.getMessage());
+            System.err.println("Error occurred while initializing ExarotonClient");
+            System.err.println("Error message: " + e.getMessage());
             System.exit(1);
         }
 
         try {
-            Account account = client.getAccount();
+            Account account = mUserClient.getAccount();
             userName = account.getName(); // Sets username if API key given but no username is stored
             System.out.println("Welcome, " + userName + "!");
         } catch (APIException e) {
-            System.out.println("Error occurred while getting account info");
+            System.err.println("Error occurred while getting account info");
             System.exit(1);
         }
 
@@ -124,12 +132,15 @@ public class Main {
         }
 
         // Now we can do everything we wanted to do
-        Server currServer = null;
+        // Server currServer = null;
         String serverName = "No Server Being Managed";
         String serverId = "";
         int inputNum = 0;
         while (inputNum != 6) {
             // Init while loop for main menu
+            if (mCurrServer != null) {
+                serverName = mCurrServer.getName();
+            }
             System.out.println("Enter the corresponding number/letter to make your selection\n");
             System.out.println("Current Server: " + serverName + "\n");
             System.out.println("1. Change server being managed");
@@ -140,7 +151,7 @@ public class Main {
             System.out.println("6. Exit");
 
 
-            inputNum = MenuInputParse();
+            inputNum = MenuInputParse(1, 6);
 
             switch (inputNum) {
                 case 1:
@@ -172,7 +183,7 @@ public class Main {
         System.out.println("\nSee you soon!");
     }
 
-    private static int MenuInputParse() {
+    private static int MenuInputParse(int firstOption, int lastOption) {
         // Returns num parsed from user input
         // Used for numbered option menus
         Scanner myScanner = new Scanner(System.in);
@@ -185,13 +196,13 @@ public class Main {
             String userAnswer = myScanner.nextLine();
             try {
                 userConverted = Integer.parseInt(userAnswer);
-                if (userConverted < 1 || userConverted > 6) {
+                if (userConverted < firstOption || userConverted > lastOption) {
                     throw new NumberFormatException("Number out of range");
                 }
                 rightFormat = true;
             } catch (NumberFormatException e) {
                 if (e.getMessage().equals("Number out of range")) {
-                    System.out.println("Please enter a number 1-6.");
+                    System.out.println("Please enter a number " + firstOption + "-" + lastOption);
                 } else {
                     System.out.println("Please input a valid number.");
                 }
@@ -204,12 +215,77 @@ public class Main {
     private static void ChangeServerSubMenu() {
         // First get available servers
         System.out.println("Here are the servers associated with your account:\n");
-        // Assign a number to each account
-        
+
+        Server[] serverList = null;
+        try {
+            serverList = mUserClient.getServers();
+        } catch (APIException e) {
+            System.out.println("Error occurred while getting server list");
+            System.exit(1);
+        }
+
+        // Then print them in order
+        for (int i = 0; i < serverList.length; i++) {
+            System.out.println((i + 1) + ". Server Name: " + serverList[i].getName());
+            System.out.println("   Server Address: " + serverList[i].getAddress() + "\n");
+        }
+
+        System.out.print("Enter the corresponding number to choose which server you would like to manage: ");
+        // Need to subtract 1 because we have a zero-indexed list rather than 1-indexed
+        int chosenServer = MenuInputParse(1, serverList.length) - 1;
+
+        mCurrServer = serverList[chosenServer];
+        System.out.println("\n" + mCurrServer.getName() + " is now being managed!\n");
 
     }
 
     private static void ConsoleConnectSubMenu() {
+        System.out.println("You are about to be connected to the console associated with your server.");
+        System.out.println("If you type 'q', you will exit the console menu without stopping the server.");
+        System.out.print("Type 'y' if you want to proceed or type 'n' if you want to go back: ");
+
+        Scanner myScanner = new Scanner(System.in);
+        String answer = myScanner.nextLine();
+        while (!answer.equalsIgnoreCase("y") && !answer.equalsIgnoreCase("n")) {
+            // If user enters anything other than y or n (case-insensitive), then make them answer again
+            System.out.print("Please answer y/n: ");
+            answer = myScanner.nextLine();
+        }
+        myScanner.close();
+
+        if (answer.equalsIgnoreCase("y")) {
+            System.out.println();
+            mCurrServer.subscribe("console");
+
+            Scanner commandScanner = new Scanner(System.in);
+            String userCommand = "";
+            mCurrServer.addConsoleSubscriber(new ConsoleSubscriber() {
+                @Override
+                public void line(String line) {
+                    System.out.println(line);
+                }
+            });
+            while (!userCommand.equals("q")) {
+                if (!userCommand.isEmpty()) {
+                    // Don't execute command if blank
+                    try {
+                        mCurrServer.executeCommand(userCommand);
+                    } catch (APIException e) {
+                        System.out.println("Error occurred while executing the user's command");
+                        System.exit(1);
+                    }
+
+                }
+
+                // Read input from user
+                userCommand = commandScanner.nextLine();
+            }
+
+            // Unsub and close everything
+            myScanner.close();
+            mCurrServer.unsubscribe();
+            System.out.println("Server console has been closed!\n");
+        }
 
     }
 

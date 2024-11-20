@@ -12,3 +12,6 @@ dictionaries/
 
 ### IMPORTANT ###
 .env
+
+### Generated Files ###
+main.config

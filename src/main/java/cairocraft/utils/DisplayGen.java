@@ -49,13 +49,13 @@ public class DisplayGen {
 
                 System.out.print(SaveAPIKeyPrompt);
                 String saveAPIAnswer = myScanner.nextLine();
-                while (!saveAPIAnswer.equalsIgnoreCase("Y") && !saveAPIAnswer.equalsIgnoreCase("N")) {
+                while (!saveAPIAnswer.equalsIgnoreCase("y") && !saveAPIAnswer.equalsIgnoreCase("n")) {
                     // If user enters anything other than y or n (case-insensitive), then make them answer again
                     System.out.print(SaveAPIPromptError);
                     saveAPIAnswer = myScanner.nextLine();
                 }
 
-                if (saveAPIAnswer.equalsIgnoreCase("Y")) {
+                if (saveAPIAnswer.equalsIgnoreCase("y")) {
                     strArray[2] = "True";
                 } else {
                     strArray[2] = "False";

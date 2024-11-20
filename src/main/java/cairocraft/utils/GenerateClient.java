@@ -1,6 +1,7 @@
 package cairocraft.utils;
 
 import com.exaroton.api.ExarotonClient;
+import com.exaroton.api.account.Account;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -23,13 +24,24 @@ public class GenerateClient {
             throw new RuntimeException(e);
         }
 
+        ExarotonClient client = null;
+        client = Initialize(API_TOKEN); // Let the caller handle any exceptions that are thrown
+
         // Now we can use the API token to do our work
-        return new ExarotonClient(API_TOKEN);
+        return client;
     }
 
     public static ExarotonClient Initialize(String API_TOKEN) {
-        return new ExarotonClient(API_TOKEN);
+
+        ExarotonClient client = null;
+        try {
+            client = new ExarotonClient(API_TOKEN);
+            Account testAccount = client.getAccount();
+        } catch (Exception e) {
+            throw new RuntimeException("API Token is invalid. Session terminating...", e.getCause());
+        }
+        return client;
     }
 
-    
+
 }
