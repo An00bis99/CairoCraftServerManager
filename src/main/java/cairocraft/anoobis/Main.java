@@ -46,43 +46,44 @@ public class Main {
             }
         }
 
-        // First check if config file exists
         String apiKey = "";
         boolean userExists = false;
         boolean apiSave = false;
         String userName = "";
-        try {
-            File configFile = new File("main.config");
-            Scanner myScanner = new Scanner(configFile);
+        String[] configArray = new String[3];
 
+        if (!DevMode) {
+            // First check if config file exists
             try {
-                String[] apiSplit = (myScanner.nextLine()).split("=");
-                if (apiSplit.length == 2) {
-                    apiKey = apiSplit[1];
+                File configFile = new File("main.config");
+                Scanner myScanner = new Scanner(configFile);
+
+                try {
+                    String[] apiSplit = (myScanner.nextLine()).split("=");
+                    if (apiSplit.length == 2) {
+                        apiKey = apiSplit[1];
+                    }
+                    userExists = Boolean.parseBoolean((myScanner.nextLine()).split("=")[1]);
+                    apiSave = Boolean.parseBoolean((myScanner.nextLine()).split("=")[1]);
+                    userName = (myScanner.nextLine()).split("=")[1];
+                } catch (NoSuchElementException e) {
+                    System.out.println("Error occurred while reading the config file");
+                    System.exit(1);
                 }
-                userExists = Boolean.parseBoolean((myScanner.nextLine()).split("=")[1]);
-                apiSave = Boolean.parseBoolean((myScanner.nextLine()).split("=")[1]);
-                userName = (myScanner.nextLine()).split("=")[1];
-            } catch (NoSuchElementException e) {
-                System.out.println("Error occurred while reading the config file");
-                System.exit(1);
-            } finally {
                 myScanner.close();
+                // Initialize with all fields since user exists (username may not be specified)
+                DisplayGen.Initialize(userExists, apiSave, userName);
+            } catch (FileNotFoundException e) {
+                // File doesn't exist so do the call as if no user exists
+                DisplayGen.Initialize(userExists, apiSave);
             }
 
-            // Initialize with all fields since user exists (username may not be specified)
-            DisplayGen.Initialize(userExists, apiSave, userName);
-        } catch (FileNotFoundException e) {
-            // File doesn't exist so do the call as if no user exists
-            DisplayGen.Initialize(userExists, apiSave);
-        }
+            configArray = DisplayGen.WelcomeMessage();
 
-        String[] configArray = new String[3];
-        configArray = DisplayGen.WelcomeMessage();
-
-        if (apiKey.isEmpty()) {
-            // Only use userInput APIKey if none on file
-            apiKey = configArray[0];
+            if (apiKey.isEmpty()) {
+                // Only use userInput APIKey if none on file
+                apiKey = configArray[0];
+            }
         }
 
 
@@ -104,31 +105,34 @@ public class Main {
             System.exit(1);
         }
 
-        try {
-            Account account = mUserClient.getAccount();
-            userName = account.getName(); // Sets username if API key given but no username is stored
-            System.out.println("Welcome, " + userName + "!");
-        } catch (APIException e) {
-            System.err.println("Error occurred while getting account info");
-            System.exit(1);
-        }
+        if (!DevMode) {
 
-        // Then write back the user's preferences
-        try {
-            FileWriter configWrite = new FileWriter("main.config");
-            String apiToWrite = "";
-            if (configArray[2].equals("True")) {
-                apiToWrite += apiKey;
+            try {
+                Account account = mUserClient.getAccount();
+                userName = account.getName(); // Sets username if API key given but no username is stored
+                System.out.println("Welcome, " + userName + "!");
+            } catch (APIException e) {
+                System.err.println("Error occurred while getting account info");
+                System.exit(1);
             }
-            configWrite.write("API=" + apiToWrite + "\n");
-            configWrite.write("userExists=" + configArray[1] + "\n");
-            configWrite.write("apiSave=" + configArray[2] + "\n");
-            configWrite.write("userName=" + userName + "\n");
-            configWrite.close();
 
-        } catch (IOException e) {
-            System.out.println("Error occurred while writing the config file");
-            System.exit(1);
+            // Then write back the user's preferences
+            try {
+                FileWriter configWrite = new FileWriter("main.config");
+                String apiToWrite = "";
+                if (configArray[2].equals("True")) {
+                    apiToWrite += apiKey;
+                }
+                configWrite.write("API=" + apiToWrite + "\n");
+                configWrite.write("userExists=" + configArray[1] + "\n");
+                configWrite.write("apiSave=" + configArray[2] + "\n");
+                configWrite.write("userName=" + userName + "\n");
+                configWrite.close();
+
+            } catch (IOException e) {
+                System.out.println("Error occurred while writing the config file");
+                System.exit(1);
+            }
         }
 
         // Now we can do everything we wanted to do
@@ -240,6 +244,9 @@ public class Main {
     }
 
     private static void ConsoleConnectSubMenu() {
+        if (!ServerExists()) {
+            return;
+        }
         System.out.println("You are about to be connected to the console associated with your server.");
         System.out.println("If you type 'q', you will exit the console menu without stopping the server.");
         System.out.print("Type 'y' if you want to proceed or type 'n' if you want to go back: ");
@@ -251,20 +258,20 @@ public class Main {
             System.out.print("Please answer y/n: ");
             answer = myScanner.nextLine();
         }
-        myScanner.close();
 
         if (answer.equalsIgnoreCase("y")) {
             System.out.println();
             mCurrServer.subscribe("console");
 
-            Scanner commandScanner = new Scanner(System.in);
-            String userCommand = "";
+
             mCurrServer.addConsoleSubscriber(new ConsoleSubscriber() {
                 @Override
                 public void line(String line) {
                     System.out.println(line);
                 }
             });
+            Scanner commandScanner = new Scanner(System.in);
+            String userCommand = "";
             while (!userCommand.equals("q")) {
                 if (!userCommand.isEmpty()) {
                     // Don't execute command if blank
@@ -282,7 +289,6 @@ public class Main {
             }
 
             // Unsub and close everything
-            myScanner.close();
             mCurrServer.unsubscribe();
             System.out.println("Server console has been closed!\n");
         }
@@ -290,15 +296,29 @@ public class Main {
     }
 
     private static void StartServer() {
+        if (!ServerExists()) {
+        }
 
     }
 
     private static void StopServer() {
+        if (!ServerExists()) {
+        }
 
     }
 
     private static void ModifyFilesSubMenu() {
+        if (!ServerExists()) {
+        }
 
+    }
+
+    private static boolean ServerExists() {
+        if (mCurrServer == null) {
+            System.out.println("\nYou need to select a server to manage first!\n");
+            return false;
+        }
+        return true;
     }
 
 }
