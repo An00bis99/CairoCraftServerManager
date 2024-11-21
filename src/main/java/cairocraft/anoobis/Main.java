@@ -6,6 +6,7 @@ import com.exaroton.api.APIException;
 import com.exaroton.api.ExarotonClient;
 import com.exaroton.api.account.Account;
 import com.exaroton.api.server.Server;
+import com.exaroton.api.server.ServerStatus;
 import com.exaroton.api.ws.subscriber.ConsoleSubscriber;
 
 import java.io.File;
@@ -138,15 +139,23 @@ public class Main {
         // Now we can do everything we wanted to do
         // Server currServer = null;
         String serverName = "No Server Being Managed";
+        String serverStatus;
+        boolean isOnline = false;
         String serverId = "";
         int inputNum = 0;
         while (inputNum != 6) {
             // Init while loop for main menu
             if (mCurrServer != null) {
                 serverName = mCurrServer.getName();
+                isOnline = mCurrServer.hasStatus(ServerStatus.ONLINE);
+            }
+            if (isOnline) {
+                serverStatus = "online";
+            } else {
+                serverStatus = "offline";
             }
             System.out.println("Enter the corresponding number/letter to make your selection\n");
-            System.out.println("Current Server: " + serverName + "\n");
+            System.out.println("Current Server: " + serverName + " | Currently " + serverStatus + "\n");
             System.out.println("1. Change server being managed");
             System.out.println("2. Establish Connection with the server's Console");
             System.out.println("3. Start the server");
@@ -297,18 +306,52 @@ public class Main {
 
     private static void StartServer() {
         if (!ServerExists()) {
+            return;
         }
 
+        try {
+            mCurrServer.start();
+        } catch (APIException e) {
+            System.out.println("Error occurred while starting the server. Exiting...");
+            System.exit(1);
+        }
+
+        System.out.println("\nServer has been started!\n");
     }
 
     private static void StopServer() {
         if (!ServerExists()) {
+            return;
         }
 
+        try {
+            mCurrServer.stop();
+        } catch (APIException e) {
+            System.out.println("Error occurred while stopping the server. Exiting...");
+            System.exit(1);
+        }
+
+        System.out.println("\nServer has been stopped!\n");
     }
 
     private static void ModifyFilesSubMenu() {
         if (!ServerExists()) {
+            return;
+        }
+
+        System.out.println("1. Create a new file");
+        System.out.println("2. Create a new directory");
+        System.out.println("3. Replace a file");
+        System.out.println("4. Delete a file");
+        System.out.println("5. Delete a directory");
+        System.out.println("6. Go back to the main menu\n");
+
+        int inputNum = MenuInputParse(1, 6);
+        Scanner myScanner = new Scanner(System.in);
+        switch (inputNum) {
+            case 1:
+                System.out.print("\nPlease enter the file name, including the directory: ");
+                //ServerFile currFile = new ServerFile(mUserClient, mCurrServer, )
         }
 
     }
