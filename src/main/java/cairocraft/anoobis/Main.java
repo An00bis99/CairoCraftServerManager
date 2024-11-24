@@ -310,6 +310,11 @@ public class Main {
     private static void StartServer() {
         if (!ServerExists()) {
             return;
+        } else {
+            if (mCurrServer.hasStatus(ServerStatus.ONLINE)) {
+                System.out.println("Can't start the server as it is already started!\n");
+                return;
+            }
         }
 
         try {
@@ -325,6 +330,11 @@ public class Main {
     private static void StopServer() {
         if (!ServerExists()) {
             return;
+        } else {
+            if (mCurrServer.hasStatus(ServerStatus.OFFLINE)) {
+                System.out.println("Can't stop the server as it hasn't been started yet!\n");
+                return;
+            }
         }
 
         try {
@@ -367,18 +377,7 @@ public class Main {
                     currFile = mCurrServer.getFile(serverFilePath);
                     System.out.println("\nNow enter the path of the file you want to upload, including the directory path: ");
                     localFilePath = myScanner.nextLine();
-                    try {
-                        currFile.upload(Paths.get(localFilePath));
-                    } catch (InvalidPathException e) {
-                        System.out.println("The path to the file you want to upload doesn't exist. Aborting...\n");
-                        break;
-                    } catch (IOException e) {
-                        System.out.println("Error occurred while uploading the file. Aborting...\n");
-                        System.out.println(e.getMessage());
-                        break;
-                    } catch (APIException e) {
-                        System.out.println("Error occurred while uploading the file (From Exaroton's API). Aborting...\n");
-                        System.out.println(e.getMessage());
+                    if (FileTransfer(true, serverFilePath, localFilePath) == 1) {
                         break;
                     }
 
@@ -391,15 +390,7 @@ public class Main {
                     System.out.println("Now enter the name you want to give this file, including the directory path: ");
                     localFilePath = myScanner.nextLine();
                     // Now we download the file to the specified local path
-                    try {
-                        currFile.download(Paths.get(localFilePath));
-                    } catch (IOException e) {
-                        System.out.println("Error occurred while downloading the file. Aborting...\n");
-                        System.out.println(e.getMessage());
-                        break;
-                    } catch (APIException e) {
-                        System.out.println("Error occurred while downloading the file (From Exaroton's API). Aborting...\n");
-                        System.out.println(e.getMessage());
+                    if (FileTransfer(false, serverFilePath, localFilePath) == 1) {
                         break;
                     }
 
@@ -418,14 +409,8 @@ public class Main {
                         System.out.println("There are no files in the provided local directory. Aborting...\n");
                         break;
                     }
-                    
-                    try {
-                        currFile = mCurrServer.getFile(serverDir);
-                        currFile.createAsDirectory(); // No check needed, will do nothing if dir already exists
-                    } catch (APIException e) {
-                        // Problem creating the directory
-                        System.out.println("Error occurred while creating the directory. Aborting...\n");
-                        System.out.println(e.getMessage());
+
+                    if (CreateDirectory(serverDir) == 1) {
                         break;
                     }
 
@@ -434,15 +419,7 @@ public class Main {
                         String fullServerPath = serverDir + "/" + fileToUpload.getName();
                         currFile = mCurrServer.getFile(fullServerPath);
 
-                        try {
-                            currFile.upload(Paths.get(fullLocalPath));
-                        } catch (IOException e) {
-                            System.out.println("Error occurred while uploading the file. Aborting...\n");
-                            System.out.println(e.getMessage());
-                            break;
-                        } catch (APIException e) {
-                            System.out.println("Error occurred while uploading the file (Exaroton API). Aborting...\n");
-                            System.out.println(e.getMessage());
+                        if (FileTransfer(true, fullServerPath, fullLocalPath) == 1) {
                             break;
                         }
                     }
@@ -452,12 +429,7 @@ public class Main {
                 case 4:
                     System.out.println("\nPlease enter the name of the server directory you'd like to create: ");
                     serverDir = myScanner.nextLine();
-                    currFile = mCurrServer.getFile(serverDir);
-                    try {
-                        currFile.createAsDirectory();
-                    } catch (APIException e) {
-                        System.out.println("Error occurred while creating the directory (Exaroton API). Aborting...\n");
-                        System.out.println(e.getMessage());
+                    if (CreateDirectory(serverDir) == 1) {
                         break;
                     }
 
@@ -467,12 +439,7 @@ public class Main {
                     // Just do inverse of 1st case
                     System.out.println("\nPlease enter the name of the server file you'd like to delete: ");
                     serverFilePath = myScanner.nextLine();
-                    currFile = mCurrServer.getFile(serverFilePath);
-                    try {
-                        currFile.delete();
-                    } catch (APIException e) {
-                        System.out.println("Error occurred while deleting the file (Exaroton API). Aborting...\n");
-                        System.out.println(e.getMessage());
+                    if (DeleteOffServer(serverFilePath) == 1) {
                         break;
                     }
 
@@ -482,12 +449,7 @@ public class Main {
                     // Delete the directory, empty or not
                     System.out.println("\nPlease enter the name of the server directory you'd like to delete: ");
                     serverDir = myScanner.nextLine();
-                    currFile = mCurrServer.getFile(serverDir);
-                    try {
-                        currFile.delete();
-                    } catch (APIException e) {
-                        System.out.println("Error occurred while deleting the directory (Exaroton API). Aborting...\n");
-                        System.out.println(e.getMessage());
+                    if (DeleteOffServer(serverDir) == 1) {
                         break;
                     }
 
@@ -500,6 +462,64 @@ public class Main {
 
     }
 
+    private static int DeleteOffServer(String serverFilePath) {
+        // Return 1 if unsuccessful
+        ServerFile currFile = mCurrServer.getFile(serverFilePath);
+        try {
+            currFile.delete();
+        } catch (APIException e) {
+            System.out.println("Error occurred during deletion (Exaroton API). Reason: " + e.getMessage() + "\n");
+            return 1;
+        }
+
+        return 0;
+    }
+
+    private static int CreateDirectory(String serverDir) {
+        ServerFile currFile = mCurrServer.getFile(serverDir);
+        try {
+            currFile = mCurrServer.getFile(serverDir);
+            currFile.createAsDirectory(); // No check needed, will do nothing if dir already exists
+        } catch (APIException e) {
+            // Problem creating the directory
+            System.out.println("Error occurred while creating the directory. Reason: " + e.getMessage() + "\n");
+            return 1;
+        }
+
+        return 0;
+    }
+
+    private static int FileTransfer(boolean isUpload, String serverFilePath, String localFilePath) {
+        ServerFile currFile = mCurrServer.getFile(serverFilePath);
+        if (isUpload) {
+            try {
+                currFile.upload(Paths.get(localFilePath));
+            } catch (InvalidPathException e) {
+                System.out.println("The path to the file you want to upload doesn't exist. Aborting...\n");
+                return 1;
+            } catch (IOException e) {
+                System.out.println("Error occurred while uploading the file. Reason: " + e.getMessage() + "\n");
+                return 1;
+            } catch (APIException e) {
+                System.out.println("Error occurred while uploading the file (From Exaroton's API). Reason: " + e.getMessage() + "\n");
+                return 1;
+            }
+            return 0;
+        } else {
+            try {
+                currFile.download(Paths.get(localFilePath));
+            } catch (IOException e) {
+                System.out.println("Error occurred while downloading the file. Reason: " + e.getMessage() + "\n");
+                return 1;
+            } catch (APIException e) {
+                System.out.println("Error occurred while downloading the file (From Exaroton's API). Reason: " + e.getMessage() + "\n");
+                return 1;
+            }
+            return 0;
+        }
+
+    }
+
     private static boolean ServerExists() {
         if (mCurrServer == null) {
             System.out.println("\nYou need to select a server to manage first!\n");
@@ -507,5 +527,6 @@ public class Main {
         }
         return true;
     }
+
 
 }
