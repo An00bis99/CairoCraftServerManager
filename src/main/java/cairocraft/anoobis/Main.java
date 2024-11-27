@@ -142,21 +142,54 @@ public class Main {
         // Now we can do everything we wanted to do
         // Server currServer = null;
         String serverName = "No Server Being Managed";
-        String serverStatus;
-        boolean isOnline = false;
+        String serverStatus = "unavailable";
+        int serverState = 0;
         String serverId = "";
         int inputNum = 0;
         while (inputNum != 6) {
             // Init while loop for main menu
             if (mCurrServer != null) {
                 serverName = mCurrServer.getName();
-                isOnline = mCurrServer.hasStatus(ServerStatus.ONLINE);
+                serverState = mCurrServer.getStatus();
             }
-            if (isOnline) {
-                serverStatus = "online";
-            } else {
-                serverStatus = "offline";
+            // TODO: Will change this into an array access with the array entries being the strings
+            switch (serverState) {
+                case 0:
+                    serverStatus = "online";
+                    break;
+                case 1:
+                    serverStatus = "offline";
+                    break;
+                case 2:
+                    serverStatus = "starting";
+                    break;
+                case 3:
+                    serverStatus = "stopping";
+                    break;
+                case 4:
+                    serverStatus = "restarting";
+                    break;
+                case 5:
+                    serverStatus = "saving";
+                    break;
+                case 6:
+                    serverStatus = "loading";
+                    break;
+                case 7:
+                    serverStatus = "crashing";
+                    break;
+                case 8:
+                    serverStatus = "pending";
+                    break;
+                case 9:
+                    serverStatus = "transferring";
+                    break;
+                case 10:
+                    serverStatus = "preparing";
             }
+
+            // TODO: Figure out what to do when server is crashed
+
             System.out.println("Enter the corresponding number/letter to make your selection\n");
             System.out.println("Current Server: " + serverName + " | Currently " + serverStatus + "\n");
             System.out.println("1. Change server being managed");
@@ -315,16 +348,21 @@ public class Main {
                 System.out.println("Can't start the server as it is already started!\n");
                 return;
             }
+            else if (mCurrServer.hasStatus(ServerStatus.STARTING)) {
+                System.out.println("Server is currently starting!\n");
+            }
         }
 
-        try {
-            mCurrServer.start();
-        } catch (APIException e) {
-            System.out.println("Error occurred while starting the server. Exiting...");
-            System.exit(1);
+        if (mCurrServer.hasStatus(ServerStatus.OFFLINE)) {
+            try {
+                mCurrServer.start();
+            } catch (APIException e) {
+                System.out.println("Error occurred while starting the server. Exiting...");
+                System.exit(1);
+            }
         }
 
-        System.out.println("\nServer has been started!\n");
+        System.out.println("\nServer has been told to start!\n");
     }
 
     private static void StopServer() {
@@ -335,16 +373,21 @@ public class Main {
                 System.out.println("Can't stop the server as it hasn't been started yet!\n");
                 return;
             }
+            else if (mCurrServer.hasStatus(ServerStatus.STOPPING)) {
+                System.out.println("Server is already stopping!\n");
+            }
         }
 
-        try {
-            mCurrServer.stop();
-        } catch (APIException e) {
-            System.out.println("Error occurred while stopping the server. Exiting...");
-            System.exit(1);
+        if (mCurrServer.hasStatus(ServerStatus.ONLINE)) {
+            try {
+                mCurrServer.stop();
+            } catch (APIException e) {
+                System.out.println("Error occurred while stopping the server. Exiting...");
+                System.exit(1);
+            }
         }
 
-        System.out.println("\nServer has been stopped!\n");
+        System.out.println("\nServer has been told to stop!\n");
     }
 
     private static void ModifyFilesSubMenu() {
