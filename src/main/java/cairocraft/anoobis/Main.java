@@ -492,8 +492,34 @@ public class Main {
     private static int FileTransfer(boolean isUpload, String serverFilePath, String localFilePath) {
         ServerFile currFile = mCurrServer.getFile(serverFilePath);
         if (isUpload) {
+            if (CreateDirectory(serverFilePath) == 0) {
+                // Given folder is a directory, do recursion
+                File localDirAccessible = new File(serverFilePath);
+                File[] filesToUpload = localDirAccessible.listFiles();
+                if (filesToUpload == null) {
+                    System.out.println("There are no files in the provided local directory. Aborting...\n");
+                    return 1;
+                }
+
+                if (CreateDirectory(serverFilePath) == 1) {
+                    return 1;
+                }
+
+                for (File fileToUpload : filesToUpload) {
+                    String fullLocalPath = localFilePath + "/" + fileToUpload.getName();
+                    String fullServerPath = serverFilePath + "/" + fileToUpload.getName();
+                    currFile = mCurrServer.getFile(fullServerPath);
+
+                    if (FileTransfer(true, fullServerPath, fullLocalPath) == 1) {
+                        break;
+                    }
+                }
+                return 0;
+            }
+            
             try {
                 currFile.upload(Paths.get(localFilePath));
+
             } catch (InvalidPathException e) {
                 System.out.println("The path to the file you want to upload doesn't exist. Aborting...\n");
                 return 1;
