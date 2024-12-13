@@ -19,6 +19,8 @@ import java.nio.file.Paths;
 import java.util.NoSuchElementException;
 import java.util.Scanner;
 
+import static java.nio.file.Files.isDirectory;
+
 public class Main {
 
     private static ExarotonClient mUserClient = null;
@@ -347,8 +349,7 @@ public class Main {
             if (mCurrServer.hasStatus(ServerStatus.ONLINE)) {
                 System.out.println("Can't start the server as it is already started!\n");
                 return;
-            }
-            else if (mCurrServer.hasStatus(ServerStatus.STARTING)) {
+            } else if (mCurrServer.hasStatus(ServerStatus.STARTING)) {
                 System.out.println("Server is currently starting!\n");
             }
         }
@@ -372,8 +373,7 @@ public class Main {
             if (mCurrServer.hasStatus(ServerStatus.OFFLINE)) {
                 System.out.println("Can't stop the server as it hasn't been started yet!\n");
                 return;
-            }
-            else if (mCurrServer.hasStatus(ServerStatus.STOPPING)) {
+            } else if (mCurrServer.hasStatus(ServerStatus.STOPPING)) {
                 System.out.println("Server is already stopping!\n");
             }
         }
@@ -460,7 +460,6 @@ public class Main {
                     for (File fileToUpload : filesToUpload) {
                         String fullLocalPath = localDir + "/" + fileToUpload.getName();
                         String fullServerPath = serverDir + "/" + fileToUpload.getName();
-                        currFile = mCurrServer.getFile(fullServerPath);
 
                         if (FileTransfer(true, fullServerPath, fullLocalPath) == 1) {
                             break;
@@ -526,7 +525,9 @@ public class Main {
         } catch (APIException e) {
             // Problem creating the directory
             System.out.println("Error occurred while creating the directory. Reason: " + e.getMessage() + "\n");
+
             return 1;
+
         }
 
         return 0;
@@ -535,31 +536,28 @@ public class Main {
     private static int FileTransfer(boolean isUpload, String serverFilePath, String localFilePath) {
         ServerFile currFile = mCurrServer.getFile(serverFilePath);
         if (isUpload) {
-            if (CreateDirectory(serverFilePath) == 0) {
-                // Given folder is a directory, do recursion
-                File localDirAccessible = new File(serverFilePath);
+            // Check if given file path is another directory
+            if (isDirectory(Paths.get(localFilePath))) {
+                // Directory so, do recursion
+                CreateDirectory(serverFilePath);
+                File localDirAccessible = new File(localFilePath);
                 File[] filesToUpload = localDirAccessible.listFiles();
-                if (filesToUpload == null) {
-                    System.out.println("There are no files in the provided local directory. Aborting...\n");
-                    return 1;
-                }
 
-                if (CreateDirectory(serverFilePath) == 1) {
-                    return 1;
-                }
 
-                for (File fileToUpload : filesToUpload) {
-                    String fullLocalPath = localFilePath + "/" + fileToUpload.getName();
-                    String fullServerPath = serverFilePath + "/" + fileToUpload.getName();
-                    currFile = mCurrServer.getFile(fullServerPath);
+                if (filesToUpload != null) {
+                    for (File fileToUpload : filesToUpload) {
+                        String fullLocalPath = localFilePath + "/" + fileToUpload.getName();
+                        String fullServerPath = serverFilePath + "/" + fileToUpload.getName();
 
-                    if (FileTransfer(true, fullServerPath, fullLocalPath) == 1) {
-                        break;
+                        if (FileTransfer(true, fullServerPath, fullLocalPath) == 1) {
+                            return 1;
+                        }
                     }
                 }
+
                 return 0;
             }
-            
+
             try {
                 currFile.upload(Paths.get(localFilePath));
 

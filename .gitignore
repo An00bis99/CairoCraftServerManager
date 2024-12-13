@@ -16,3 +16,5 @@ dictionaries/
 ### Generated Files ###
 main.config
 test.txt
+build/libs/**
+build/tmp/**
