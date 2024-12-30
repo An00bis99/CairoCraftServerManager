@@ -367,24 +367,24 @@ public class Main {
         if (!ServerExists()) {
             return;
         } else {
-            if (mCurrServer.hasStatus(ServerStatus.OFFLINE)) {
+            if (mCurrServer.hasStatus(ServerStatus.OFFLINE) || mCurrServer.hasStatus(ServerStatus.CRASHED)) {
                 System.out.println("Can't stop the server as it hasn't been started yet!\n");
-                return;
-            } else if (mCurrServer.hasStatus(ServerStatus.STOPPING)) {
+            }
+            else if (mCurrServer.hasStatus(ServerStatus.STOPPING)) {
                 System.out.println("Server is already stopping!\n");
             }
-        }
-
-        if (mCurrServer.hasStatus(ServerStatus.ONLINE)) {
-            try {
-                mCurrServer.stop();
-            } catch (APIException e) {
-                System.out.println("Error occurred while stopping the server. Exiting...");
-                System.exit(1);
+            else if (mCurrServer.hasStatus(ServerStatus.ONLINE)) {
+                try {
+                    mCurrServer.stop();
+                } catch (APIException e) {
+                    System.out.println("Error occurred while stopping the server. Exiting...");
+                    System.exit(1);
+                }
+            }
+            else {
+                System.out.println("Server is currently occupied!\n");
             }
         }
-
-        System.out.println("\nServer has been told to stop!\n");
     }
 
     private static void ModifyFilesSubMenu() {
