@@ -348,22 +348,19 @@ public class Main {
         } else {
             if (mCurrServer.hasStatus(ServerStatus.ONLINE)) {
                 System.out.println("Can't start the server as it is already started!\n");
-                return;
-            } else if (mCurrServer.hasStatus(ServerStatus.STARTING)) {
+            } else if ((mCurrServer.hasStatus(ServerStatus.OFFLINE) || mCurrServer.hasStatus(ServerStatus.CRASHED))) {
+                System.out.println("Server is currently starting!\n");
+                try {
+                    mCurrServer.start();
+                } catch (APIException e) {
+                    // TODO: Gracefully handle the API Exception
+                    System.out.println("Error occurred while starting the server. Exiting...");
+                    System.exit(1);
+                }
+            } else {
                 System.out.println("Server is currently starting!\n");
             }
         }
-
-        if (mCurrServer.hasStatus(ServerStatus.OFFLINE)) {
-            try {
-                mCurrServer.start();
-            } catch (APIException e) {
-                System.out.println("Error occurred while starting the server. Exiting...");
-                System.exit(1);
-            }
-        }
-
-        System.out.println("\nServer has been told to start!\n");
     }
 
     private static void StopServer() {
