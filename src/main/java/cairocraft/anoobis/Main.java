@@ -518,11 +518,8 @@ public class Main {
         } catch (APIException e) {
             // Problem creating the directory
             System.out.println("Error occurred while creating the directory. Reason: " + e.getMessage() + "\n");
-
             return 1;
-
         }
-
         return 0;
     }
 
