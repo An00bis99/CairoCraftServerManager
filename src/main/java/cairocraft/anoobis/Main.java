@@ -155,12 +155,13 @@ public class Main {
                 serverState = mCurrServer.getStatus();
             }
             // TODO: Will change this into an array access with the array entries being the strings
+            // TODO: Could also do ENUM
             switch (serverState) {
                 case 0:
-                    serverStatus = "online";
+                    serverStatus = "offline";
                     break;
                 case 1:
-                    serverStatus = "offline";
+                    serverStatus = "online";
                     break;
                 case 2:
                     serverStatus = "starting";
@@ -178,7 +179,7 @@ public class Main {
                     serverStatus = "loading";
                     break;
                 case 7:
-                    serverStatus = "crashing";
+                    serverStatus = "crashed";
                     break;
                 case 8:
                     serverStatus = "pending";
@@ -190,7 +191,6 @@ public class Main {
                     serverStatus = "preparing";
             }
 
-            // TODO: Figure out what to do when server is crashed
 
             System.out.println("Enter the corresponding number/letter to make your selection\n");
             System.out.println("Current Server: " + serverName + " | Currently " + serverStatus + "\n");
@@ -401,7 +401,6 @@ public class Main {
         String serverFilePath;
         String serverDir;
         String localFilePath;
-        ServerFile currFile = null;
         while (inputNum != 7) {
             System.out.println("\n1. Upload a new file (Overwrites existing files)");
             System.out.println("2. Download a file");
@@ -417,7 +416,6 @@ public class Main {
                 case 1:
                     System.out.print("\nPlease enter the desired filename on the server, including the directory path: ");
                     serverFilePath = myScanner.nextLine();
-                    currFile = mCurrServer.getFile(serverFilePath);
                     System.out.println("\nNow enter the path of the file you want to upload, including the directory path: ");
                     localFilePath = myScanner.nextLine();
                     if (FileTransfer(true, serverFilePath, localFilePath) == 1) {
@@ -429,7 +427,6 @@ public class Main {
                 case 2:
                     System.out.println("\nPlease enter the name of the file you'd like to download from the server, including the directory path: ");
                     serverFilePath = myScanner.nextLine();
-                    currFile = mCurrServer.getFile(serverFilePath);
                     System.out.println("Now enter the name you want to give this file, including the directory path: ");
                     localFilePath = myScanner.nextLine();
                     // Now we download the file to the specified local path
@@ -513,7 +510,6 @@ public class Main {
             System.out.println("Error occurred during deletion (Exaroton API). Reason: " + e.getMessage() + "\n");
             return 1;
         }
-
         return 0;
     }
 
